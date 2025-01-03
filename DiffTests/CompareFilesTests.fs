@@ -1,4 +1,4 @@
-﻿module DiffTests
+﻿module CompareFilesTests
 
 open System
 open System.IO
