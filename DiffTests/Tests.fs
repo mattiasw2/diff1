@@ -13,7 +13,7 @@ let runDiffWithTempFiles (content1: string) (content2: string) =
     let normalizedContent2 = content2.Replace("\r\n", "\n").Replace("\r", "\n")
     File.WriteAllText(file1, normalizedContent1)
     File.WriteAllText(file2, normalizedContent2)
-    let output = ConsoleCapture.CaptureOutput (fun () -> Program.compareFiles file1 file2)
+    let output = ConsoleCapture.CaptureOutput (fun () -> CompareFiles.compareFiles file1 file2)
     File.Delete(file1)
     File.Delete(file2)
     // Normalize line endings in the output

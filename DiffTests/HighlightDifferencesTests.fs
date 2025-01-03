@@ -22,5 +22,5 @@ open Xunit
 [<InlineData("this is a test", "this was a test", "this (i|wa)s a test")>] // Multi-word difference
 [<InlineData("one two three", "one two four", "one two (three|four)")>] // Multi-word difference
 let ``highlightDifferences should correctly highlight differences`` (left: string) (right: string) (expected: string) =
-    let result = Program.highlightDifferences left right
+    let result = CompareFiles.highlightDifferences left right
     Assert.Equal(expected, result)

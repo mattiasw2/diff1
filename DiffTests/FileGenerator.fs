@@ -64,6 +64,8 @@ let writeToFile (filePath: string) (content: string list) =
     File.WriteAllLines(filePath, content)
 
 /// Main function to generate files with differences.
+/// Example usage:
+/// generateFiles 1000 80 50 42 "file1.txt" "file2.txt"
 let generateFiles (lines: int) (maxWidth: int) (differences: int) (seed: int) (file1: string) (file2: string) =
     let content1 = generateContent lines maxWidth seed
     let content2 = content1
@@ -71,6 +73,3 @@ let generateFiles (lines: int) (maxWidth: int) (differences: int) (seed: int) (f
 
     writeToFile file1 modified1
     writeToFile file2 modified2
-
-/// Example usage:
-/// generateFiles 1000 80 50 42 "file1.txt" "file2.txt"
