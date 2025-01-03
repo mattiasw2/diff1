@@ -1,5 +1,6 @@
 ﻿module CompareFiles
 
+open System
 open System.IO
 
 /// Determines whether two lines are similar but different based on the following criteria:
@@ -14,7 +15,7 @@ open System.IO
 /// - true if the lines are similar but different.
 /// - false otherwise.
 let similarButDifferent (line1: string) (line2: string) =
-    let minIdentical = 3 // At least 3 identical characters (not necessarily in the same position)
+    let minIdentical = (min line1.Length line2.Length) / 2 
     let minDifferent = 1 // At least 1 differing character
 
     // Convert lines to sets of characters
