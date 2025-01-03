@@ -9,7 +9,7 @@
   <ItemGroup>
     <Compile Include="FileGenerator.fs" />
     <Compile Include="HighlightDifferencesTests.fs" />
-    <Compile Include="SimilarTests.fs" />
+    <Compile Include="SimilarButDifferentTests.fs" />
     <Compile Include="ConsoleCapture.fs" />
     <Compile Include="Tests.fs" />
     <Compile Include="Program.fs" />
