@@ -34,17 +34,29 @@ let similarButDifferent (line1: string) (line2: string) =
         identicalCount >= minIdentical && differentCount >= minDifferent
 
 // Function to compute the Longest Common Subsequence (LCS)
-let rec lcs (xs: 'a list) (ys: 'a list) =
-    match xs, ys with
-    | [], _ -> []
-    | _, [] -> []
-    | x::xtail, y::ytail ->
-        if x = y then
-            x :: lcs xtail ytail
+// Optimized LCS using Dynamic Programming
+let lcs (xs: 'a list) (ys: 'a list) =
+    let m = xs.Length
+    let n = ys.Length
+    let dp = Array2D.create (m + 1) (n + 1) 0
+
+    for i in 1 .. m do
+        for j in 1 .. n do
+            if xs.[i - 1] = ys.[j - 1] then
+                dp.[i, j] <- dp.[i - 1, j - 1] + 1
+            else
+                dp.[i, j] <- max dp.[i - 1, j] dp.[i, j - 1]
+
+    let rec backtrack i j acc =
+        if i = 0 || j = 0 then acc
+        elif xs.[i - 1] = ys.[j - 1] then
+            backtrack (i - 1) (j - 1) (xs.[i - 1] :: acc)
+        elif dp.[i - 1, j] > dp.[i, j - 1] then
+            backtrack (i - 1) j acc
         else
-            let lcs1 = lcs xs ytail
-            let lcs2 = lcs xtail ys
-            if lcs1.Length > lcs2.Length then lcs1 else lcs2
+            backtrack i (j - 1) acc
+
+    backtrack m n []
 
 type DiffPart =
     | Common of string
