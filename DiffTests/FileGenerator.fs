@@ -38,6 +38,7 @@ let applyDifferences (content1: string list) (content2: string list) (difference
                 let newLine2 = line2.[..startPos-1] + modifiedPart + line2.[startPos+replaceCount..]
 
                 modified2.[lineIndex] <- newLine2
+            | _ -> ()
 
             diffCount <- diffCount + 1
 
