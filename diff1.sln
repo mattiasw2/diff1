@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "diff1", "diff1\diff1.fsproj", "{931D8D28-26D7-4268-9B36-81489599DC0A}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "diff1", "src\diff1\diff1.fsproj", "{931D8D28-26D7-4268-9B36-81489599DC0A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffTests", "DiffTests\DiffTests.fsproj", "{E8C1A684-6A78-49ED-979B-9BFFAA6DB29B}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DiffTests", "tests\DiffTests\DiffTests.fsproj", "{E8C1A684-6A78-49ED-979B-9BFFAA6DB29B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

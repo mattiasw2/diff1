@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\diff1\diff1.fsproj" />
+    <ProjectReference Include="..\..\src\diff1\diff1.fsproj" />
   </ItemGroup>
 
 </Project>
