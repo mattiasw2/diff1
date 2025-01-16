@@ -14,7 +14,7 @@ open System.IO
 /// Returns:
 /// - true if the lines are similar but different.
 /// - false otherwise.
-let similarButDifferent (line1: string) (line2: string) =
+let similarButDifferent (line1: string) (line2: string) : bool =
     let minIdentical = (min line1.Length line2.Length) / 2 
     let minDifferent = 1 // At least 1 differing character
 
@@ -37,7 +37,7 @@ let similarButDifferent (line1: string) (line2: string) =
 
 // Function to compute the Longest Common Subsequence (LCS)
 // Optimized LCS using Dynamic Programming
-let lcs (xs: 'a list) (ys: 'a list) =
+let lcs (xs: 'a list) (ys: 'a list) : 'a list =
     let m = xs.Length
     let n = ys.Length
     let dp = Array2D.create (m + 1) (n + 1) 0
@@ -49,7 +49,7 @@ let lcs (xs: 'a list) (ys: 'a list) =
             else
                 dp.[i, j] <- max dp.[i - 1, j] dp.[i, j - 1]
 
-    let rec backtrack i j acc =
+    let rec backtrack (i: int) (j: int) (acc: 'a list) : 'a list =
         if i = 0 || j = 0 then acc
         elif xs.[i - 1] = ys.[j - 1] then
             backtrack (i - 1) (j - 1) (xs.[i - 1] :: acc)
@@ -64,11 +64,11 @@ type DiffPart =
     | Common of string
     | Difference of string * string
 
-let highlightDifferences (line1: string) (line2: string) =
+let highlightDifferences (line1: string) (line2: string) : string =
     let maxLength = max line1.Length line2.Length
     
     // Identify initial differences
-    let rec identifyDiffs i acc current1 current2 =
+    let rec identifyDiffs (i: int) (acc: DiffPart list) (current1: string) (current2: string) : DiffPart list =
         if i >= maxLength then
             if current1 <> "" || current2 <> "" then
                 acc @ [Difference(current1, current2)]
@@ -109,7 +109,7 @@ let highlightDifferences (line1: string) (line2: string) =
         i
 
     // Post-process each Difference part to split into smaller parts
-    let rec splitDifferences parts =
+    let rec splitDifferences (parts: DiffPart list) : DiffPart list =
         let rec splitDifferencePart (d1: string) (d2: string) : DiffPart list =
             let prefixLen = findPrefixLength d1 d2
             let suffixLen = findSuffixLength d1 d2
@@ -130,7 +130,7 @@ let highlightDifferences (line1: string) (line2: string) =
         | part :: rest -> part :: splitDifferences rest
 
     // Render output based on parts
-    let rec render acc diffs =
+    let rec render (acc: string) (diffs: DiffPart list) : string =
         match diffs with
         | [] -> acc
         | Common s :: rest -> render (acc + s) rest
@@ -142,12 +142,12 @@ let highlightDifferences (line1: string) (line2: string) =
     render "" refinedDiffs
 
 // Function to compare two files using LCS
-let compareFiles (file1: string) (file2: string) =
+let compareFiles (file1: string) (file2: string) : unit =
     let lines1 = File.ReadAllLines(file1) |> Array.toList
     let lines2 = File.ReadAllLines(file2) |> Array.toList
     let common = lcs lines1 lines2
 
-    let rec diff xs ys common acc =
+    let rec diff (xs: string list) (ys: string list) (common: string list) (acc: string list) : string list =
         match xs, ys, common with
         | [], [], [] -> List.rev acc // All lists are empty
         | [], [], _ -> List.rev acc // xs and ys are empty, common may have elements
