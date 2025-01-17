@@ -1,4 +1,4 @@
-The goal is to find a way to use AI agents to build bigger systems. 
+﻿The goal is to find a way to use AI agents to build bigger systems. 
 
 I have been experimenting on my bigger projects, but ChatGPT doesn't scale. 
 
