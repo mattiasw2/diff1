@@ -109,30 +109,74 @@ let lcs (xs: 'a list) (ys: 'a list) : 'a list =
 /// Highlights the differences between two similar strings by wrapping the differing parts in parentheses
 /// For example: "hello world" and "hello there" becomes "hello (world|there)"
 let highlightDifferences (line1: string) (line2: string) : string =
-    let (prefix, diff1, diff2) = StringHelper.extractDifferences line1 line2
-    if String.IsNullOrEmpty(prefix) && String.IsNullOrEmpty(diff1) && String.IsNullOrEmpty(diff2) then
-        line1  // Return original line if no differences
+    if line1 = line2 then
+        line1  // Return original line if strings are identical
     else
-        prefix + "(" + diff1 + "|" + diff2 + ")"
+        let elements1 = StringHelper.getTextElements line1
+        let elements2 = StringHelper.getTextElements line2
+        
+        // Find common prefix length in text elements
+        let rec findPrefixLen i =
+            if i >= elements1.Length || i >= elements2.Length then i
+            elif elements1.[i] = elements2.[i] then findPrefixLen (i + 1)
+            else i
+        let prefixElemCount = findPrefixLen 0
+        let prefix = String.Join("", elements1 |> Array.take prefixElemCount)
+        
+        // Find common suffix length in text elements
+        let rec findSuffixLen i =
+            let i1 = elements1.Length - 1 - i
+            let i2 = elements2.Length - 1 - i
+            if i1 < prefixElemCount || i2 < prefixElemCount then i
+            elif elements1.[i1] = elements2.[i2] then findSuffixLen (i + 1)
+            else i
+        let suffixElemCount = findSuffixLen 0
+        
+        // Extract differing parts
+        let diff1 = 
+            if elements1.Length - prefixElemCount - suffixElemCount > 0 then
+                String.Join("", elements1 |> Array.skip prefixElemCount |> Array.take (elements1.Length - prefixElemCount - suffixElemCount))
+            else ""
+        let diff2 = 
+            if elements2.Length - prefixElemCount - suffixElemCount > 0 then
+                String.Join("", elements2 |> Array.skip prefixElemCount |> Array.take (elements2.Length - prefixElemCount - suffixElemCount))
+            else ""
+        
+        let suffix = 
+            if suffixElemCount = 0 then ""
+            else String.Join("", elements1 |> Array.skip (elements1.Length - suffixElemCount))
+        
+        // If the differences are long and contain common substrings, try to break them down further
+        if diff1.Length > 3 && diff2.Length > 3 then
+            let (innerPrefix, innerDiff1, innerDiff2) = StringHelper.extractDifferences diff1 diff2
+            if not (String.IsNullOrEmpty(innerPrefix)) || not (String.IsNullOrEmpty(innerDiff1)) || not (String.IsNullOrEmpty(innerDiff2)) then
+                prefix + "(" + innerDiff1 + "|" + innerDiff2 + ")" + suffix
+            else
+                prefix + "(" + diff1 + "|" + diff2 + ")" + suffix
+        else
+            prefix + "(" + diff1 + "|" + diff2 + ")" + suffix
 
 /// Compare two files and print their differences
 let compareFiles (file1: string) (file2: string) : unit =
-    let lines1 = File.ReadAllLines(file1) |> Array.toList
-    let lines2 = File.ReadAllLines(file2) |> Array.toList
-    let common = lcs lines1 lines2
-
+    let lines1 = File.ReadAllLines(file1)  // Let exceptions propagate
+    let lines2 = File.ReadAllLines(file2)
+    
+    let common = lcs (List.ofArray lines1) (List.ofArray lines2)
+    
     let rec processLines (lines1: string list) (lines2: string list) (common: string list) =
         match lines1, lines2, common with
-        | [], [], [] -> ()  // All lines processed
-        | l1::rest1, l2::rest2, c::restc when l1 = c && l2 = c ->
+        | [], [], [] -> ()  // Done processing
+        | l1::rest1, l2::rest2, c::restCommon when l1 = c && l2 = c ->
             printfn "  %s" l1  // Common line
-            processLines rest1 rest2 restc
+            processLines rest1 rest2 restCommon
         | l1::rest1, l2::rest2, _ when similarButDifferent l1 l2 ->
-            printfn "~ %s" (highlightDifferences l1 l2)  // Similar but different
+            printfn "~ %s" (highlightDifferences l1 l2)  // Similar lines
             processLines rest1 rest2 common
-        | l1::rest1, l2::_, _ ->
+        | l1::rest1, l2::rest2, _ ->
+            // Different lines - show added line first, then removed
+            printfn "+ %s" l2  // Line added
             printfn "- %s" l1  // Line removed
-            processLines rest1 lines2 common
+            processLines rest1 rest2 common
         | [], l2::rest2, _ ->
             printfn "+ %s" l2  // Line added
             processLines [] rest2 common
@@ -141,4 +185,4 @@ let compareFiles (file1: string) (file2: string) : unit =
             processLines rest1 [] common
         | _, _, _ -> ()  // Should not happen
 
-    processLines lines1 lines2 common
+    processLines (List.ofArray lines1) (List.ofArray lines2) common

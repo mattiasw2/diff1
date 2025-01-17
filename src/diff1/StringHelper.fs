@@ -140,45 +140,44 @@ let rec findSuffixLength (s1: string) (s2: string) : int =
             else i
         findSuffix 0
 
-/// Helper function to extract differences between strings.
-/// The returned tuple contains (prefix, s1Diff, s2Diff) where:
-/// - prefix is the common prefix in terms of character positions
-/// - s1Diff is the differing part of s1 after the prefix and before any common suffix
-/// - s2Diff is the differing part of s2 after the prefix and before any common suffix
-let extractDifferences (s1: string) (s2: string) : string * string * string =
-    if s1 = s2 then
-        (s1, "", "")
+/// Extract common prefix and differences between two strings
+/// Returns a tuple of (prefix, diff1, diff2)
+let extractDifferences (line1: string) (line2: string) : string * string * string =
+    if line1 = line2 then
+        (line1, "", "")  // Return original line if strings are identical
     else
-        let prefixLen = findPrefixLength s1 s2
-        let suffixLen = findSuffixLength s1 s2
-        let s1Len = s1.Length
-        let s2Len = s2.Length
+        let elements1 = getTextElements line1
+        let elements2 = getTextElements line2
         
-        // Make sure we don't have overlapping prefix and suffix
-        let adjustedSuffixLen = 
-            if prefixLen + suffixLen > min s1Len s2Len
-            then max 0 (min s1Len s2Len - prefixLen)
-            else suffixLen
-            
-        let prefix = s1.Substring(0, prefixLen)
+        // Find common prefix length in text elements
+        let rec findPrefixLen i =
+            if i >= elements1.Length || i >= elements2.Length then i
+            elif elements1.[i] = elements2.[i] then findPrefixLen (i + 1)
+            else i
+        let prefixElemCount = findPrefixLen 0
+        let prefix = String.Join("", elements1 |> Array.take prefixElemCount)
         
-        let s1Diff = 
-            if s1Len - prefixLen - adjustedSuffixLen > 0 
-            then s1.Substring(prefixLen, s1Len - prefixLen - adjustedSuffixLen)
+        // Find common suffix length in text elements
+        let rec findSuffixLen i =
+            let i1 = elements1.Length - 1 - i
+            let i2 = elements2.Length - 1 - i
+            if i1 < prefixElemCount || i2 < prefixElemCount then i
+            elif elements1.[i1] = elements2.[i2] then findSuffixLen (i + 1)
+            else i
+        let suffixElemCount = findSuffixLen 0
+        
+        // Extract differing parts
+        let diff1 = 
+            if elements1.Length - prefixElemCount - suffixElemCount > 0 then
+                String.Join("", elements1 |> Array.skip prefixElemCount |> Array.take (elements1.Length - prefixElemCount - suffixElemCount))
             else ""
-        let s2Diff = 
-            if s2Len - prefixLen - adjustedSuffixLen > 0
-            then s2.Substring(prefixLen, s2Len - prefixLen - adjustedSuffixLen)
+        let diff2 = 
+            if elements2.Length - prefixElemCount - suffixElemCount > 0 then
+                String.Join("", elements2 |> Array.skip prefixElemCount |> Array.take (elements2.Length - prefixElemCount - suffixElemCount))
             else ""
-            
-        // If we're dealing with special characters, ensure we don't split in the middle of a text element
-        let adjustDiffForSpecialChars (s: string) (diff: string) =
-            if containsSpecialCharacters diff then
-                let elements = getTextElements diff
-                String.Join("", elements)
-            else diff
-            
-        let s1DiffAdjusted = adjustDiffForSpecialChars s1 s1Diff
-        let s2DiffAdjusted = adjustDiffForSpecialChars s2 s2Diff
-            
-        (prefix, s1DiffAdjusted, s2DiffAdjusted)
+        
+        let suffix = 
+            if suffixElemCount = 0 then ""
+            else String.Join("", elements1 |> Array.skip (elements1.Length - suffixElemCount))
+        
+        (prefix, diff1, diff2)

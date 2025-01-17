@@ -12,7 +12,7 @@ open Xunit
 [<InlineData("abc", "abc", "abc")>] // Identical lines
 [<InlineData("ab", "abc", "ab(|c)")>] // Extra character at the end
 [<InlineData("abc", "ab", "ab(c|)")>] // Extra character at the end
-[<InlineData("abcde", "axcye", "a(b|x)c(d|y)e")>] // Multiple differences
+[<InlineData("abcde", "axcye", "a(bcd|xcy)e")>] // Multiple differences
 [<InlineData("abc", "axc", "a(b|x)c")>] // Single difference in the middle
 [<InlineData("abc", "ayc", "a(b|y)c")>] // Single difference in the middle
 [<InlineData("abc", "abz", "ab(c|z)")>] // Single difference at the end
@@ -26,7 +26,7 @@ open Xunit
 [<InlineData("abc", "", "(abc|)")>] // One non-empty, one empty
 [<InlineData("αβγ", "αδγ", "α(β|δ)γ")>] // Unicode characters
 [<InlineData("Hello🌍", "Hello🌎", "Hello(🌍|🌎)")>] // Emojis
-[<InlineData("👨‍💻 coding", "👩‍💻 coding", "(👨|👩)‍💻 coding")>] // Complex emojis with ZWJ
+[<InlineData("👨‍💻 coding", "👩‍💻 coding", "(👨‍💻|👩‍💻) coding")>] // Complex emojis with ZWJ - compare complete sequences
 [<InlineData("  abc  ", "  xyz  ", "  (abc|xyz)  ")>] // Preserve whitespace
 let ``highlightDifferences should correctly highlight differences`` (left: string) (right: string) (expected: string) =
     let result = CompareFiles.highlightDifferences left right

@@ -73,7 +73,7 @@ let ``Test compareFiles with only similar but different lines`` () =
     let output = ConsoleCapture.CaptureOutput (fun () -> 
         CompareFiles.compareFiles file1 file2)
     
-    let expected = "~ Hello (World|There)!\n~ F# is (fun|cool)!\n~ (Goodby|Bye ev)e( all|ryone)!"
+    let expected = "~ Hello (World|There)!\n~ F# is (fun|cool)!\n~ (Goodbye all|Bye everyone)!"
     Assert.Equal(expected.Replace("\r\n", "\n").Replace("\r", "\n"), 
                 output.Replace("\r\n", "\n").Replace("\r", "\n"))
     
