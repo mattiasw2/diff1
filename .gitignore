@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /.windsurfrules
 /coveragereport
 /coverage-report
+/tests/DiffTests/lcov.info

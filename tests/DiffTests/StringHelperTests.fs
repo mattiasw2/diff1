@@ -104,6 +104,21 @@ let ``findSuffixLengthSpecial should work with plain strings`` () =
         Assert.True((result = expected), message)
 
 [<Fact>]
+let ``findSuffixLengthSpecial should handle overlapping prefix and suffix`` () =
+    // In "abcabc", both strings share "abc" as prefix and suffix
+    // But we should not count the second "abc" as suffix since it would overlap with the prefix
+    let result = findSuffixLengthSpecial "abcabc" "abcdef"
+    Assert.Equal(0, result)  // Should return 0 since the suffix would overlap with prefix
+    
+    // Similar case with emoji
+    let result2 = findSuffixLengthSpecial "🌍abc🌍" "🌍defghi"
+    Assert.Equal(0, result2)  // Should return 0 since the suffix emoji would overlap with prefix emoji
+    
+    // Test with longer overlapping pattern
+    let result3 = findSuffixLengthSpecial "HelloHello" "HelloWorld"
+    Assert.Equal(0, result3)  // Should return 0 since the suffix would overlap with prefix
+
+[<Fact>]
 let ``substring operations should work with text element positions`` () =
     let testCases = [
         // (input, start, length, expected)
@@ -179,6 +194,40 @@ let ``extractDifferences should correctly split strings`` () =
         Assert.True((diff2 = expectedS2), sprintf "Expected diff2 '%s', got '%s'. %s" expectedS2 diff2 message)
 
 
+
+[<Fact>]
+let ``extractDifferences should return empty strings when no common substrings`` () =
+    let s1 = "abcd"  // 4 chars
+    let s2 = "efgh"  // 4 chars, completely different
+    let (prefix, diff1, diff2) = StringHelper.extractDifferences s1 s2
+    Assert.Equal("", prefix)  // no common prefix
+    Assert.Equal(s1, diff1)   // entire first string is different
+    Assert.Equal(s2, diff2)   // entire second string is different
+    
+    // Another case with longer strings
+    let s3 = "12345"
+    let s4 = "67890"
+    let (prefix2, diff3, diff4) = StringHelper.extractDifferences s3 s4
+    Assert.Equal("", prefix2)  // no common prefix
+    Assert.Equal(s3, diff3)    // entire first string is different
+    Assert.Equal(s4, diff4)    // entire second string is different
+
+[<Fact>]
+let ``extractDifferences should return empty strings for identical strings`` () =
+    let s1 = "abcd"  // 4 chars
+    let s2 = "abcd"  // identical to s1
+    let (prefix, diff1, diff2) = StringHelper.extractDifferences s1 s2
+    Assert.Equal(s1, prefix)  // prefix should be the entire string
+    Assert.Equal("", diff1)   // no differences
+    Assert.Equal("", diff2)   // no differences
+    
+    // Another case with longer strings
+    let s3 = "12345"
+    let s4 = "12345"
+    let (prefix2, diff3, diff4) = StringHelper.extractDifferences s3 s4
+    Assert.Equal(s3, prefix2)
+    Assert.Equal("", diff3)
+    Assert.Equal("", diff4)
 
 [<Fact>]
 let ``getTextElements should handle all emoji lengths`` () =

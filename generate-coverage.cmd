@@ -3,6 +3,8 @@ echo Cleaning previous test results...
 if exist "tests\DiffTests\TestResults" rmdir /s /q "tests\DiffTests\TestResults"
 if exist "coverage-report" rmdir /s /q "coverage-report"
 
+dotnet build
+
 echo Running tests with coverage...
 dotnet test /p:CollectCoverage=true /p:CoverletOutput=./TestResults/ /p:CoverletOutputFormat=cobertura
 

@@ -149,10 +149,7 @@ let highlightDifferences (line1: string) (line2: string) : string =
         // If the differences are long and contain common substrings, try to break them down further
         if diff1.Length > 3 && diff2.Length > 3 then
             let (innerPrefix, innerDiff1, innerDiff2) = StringHelper.extractDifferences diff1 diff2
-            if not (String.IsNullOrEmpty(innerPrefix)) || not (String.IsNullOrEmpty(innerDiff1)) || not (String.IsNullOrEmpty(innerDiff2)) then
-                prefix + "(" + innerDiff1 + "|" + innerDiff2 + ")" + suffix
-            else
-                prefix + "(" + diff1 + "|" + diff2 + ")" + suffix
+            prefix + "(" + innerDiff1 + "|" + innerDiff2 + ")" + suffix
         else
             prefix + "(" + diff1 + "|" + diff2 + ")" + suffix
 

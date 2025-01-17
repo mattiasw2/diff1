@@ -28,6 +28,19 @@ open Xunit
 [<InlineData("Hello🌍", "Hello🌎", "Hello(🌍|🌎)")>] // Emojis
 [<InlineData("👨‍💻 coding", "👩‍💻 coding", "(👨‍💻|👩‍💻) coding")>] // Complex emojis with ZWJ - compare complete sequences
 [<InlineData("  abc  ", "  xyz  ", "  (abc|xyz)  ")>] // Preserve whitespace
+[<InlineData("prefix abcd suffix", "prefix abcd suffix", "prefix abcd suffix")>]  // Identical strings to make extractDifferences return ("abcd","","")
+[<InlineData("start 12345 end", "start 12345 end", "start 12345 end")>]  // Another case with identical strings
+[<InlineData("prefix middle1 suffix", "prefix middle1 suffix", "prefix middle1 suffix")>] 
+[<InlineData("start 123 end", "start 123 end", "start 123 end")>] 
+[<InlineData("🌍 abc 🌎", "🌍 abc 🌎", "🌍 abc 🌎")>] 
+[<InlineData("Hello test! Bye", "Hello test! Bye", "Hello test! Bye")>] 
+[<InlineData("", "", "")>]  // Empty strings to make extractDifferences return ("","","")
+[<InlineData("prefix abcde suffix", "prefix fghij suffix", "prefix (abcde|fghij) suffix")>]  // Long diffs (>3 chars) with no common substrings
+[<InlineData("start 12345 end", "start 67890 end", "start (12345|67890) end")>]  // Another case with long diffs (>3 chars)
+[<InlineData("prefix middle1 suffix", "prefix middle2 suffix", "prefix middle(1|2) suffix")>]
+[<InlineData("start 123 end", "start 456 end", "start (123|456) end")>]
+[<InlineData("🌍 abc 🌎", "🌍 xyz 🌎", "🌍 (abc|xyz) 🌎")>]
+[<InlineData("Hello test! Bye", "Hello world! Bye", "Hello (test|world)! Bye")>]
 let ``highlightDifferences should correctly highlight differences`` (left: string) (right: string) (expected: string) =
     let result = CompareFiles.highlightDifferences left right
     Assert.Equal(expected, result)
