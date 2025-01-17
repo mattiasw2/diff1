@@ -13,5 +13,12 @@ open Xunit
 [<InlineData("F# is fun!", "F# is cool!", true)>]
 [<InlineData("F# is fun!", "F# is cool!!!", true)>]
 [<InlineData("F# is fun!", "cool is F#!", true)>]
+[<InlineData("Hello", "Hello", false)>]  // Identical strings
+[<InlineData("", "", false)>]  // Empty strings
+[<InlineData("", "nonempty", false)>]  // One empty, one non-empty
+[<InlineData("a", "b", false)>]  // Single different characters
+[<InlineData("αβγ", "αδγ", true)>]  // Unicode characters
+[<InlineData("Hello🌍", "Hello🌎", true)>]  // Emojis
+[<InlineData("Very long string that has many characters", "Very long string with different ending", true)>]
 let ``Test SimilarButDifferent`` (line1: string, line2: string, expected: bool) =
     Assert.Equal(expected, CompareFiles.similarButDifferent line1 line2)

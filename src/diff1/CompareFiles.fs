@@ -15,25 +15,69 @@ open System.IO
 /// - true if the lines are similar but different.
 /// - false otherwise.
 let similarButDifferent (line1: string) (line2: string) : bool =
-    let minIdentical = (min line1.Length line2.Length) / 2 
-    let minDifferent = 1 // At least 1 differing character
-
-    // Convert lines to sets of characters
-    let charSet1 = Set.ofSeq line1
-    let charSet2 = Set.ofSeq line2
-
-    // Count the number of identical characters (regardless of position)
-    let identicalCount = Set.intersect charSet1 charSet2 |> Set.count
-
-    // Count the number of differing characters
-    let differentCount = (Set.union charSet1 charSet2 |> Set.count) - identicalCount
-
-    // Ensure the lines are not identical
-    if line1 = line2 then
+    // Handle empty strings and single characters
+    if String.IsNullOrEmpty(line1) || String.IsNullOrEmpty(line2) || 
+       line1.Length < 2 || line2.Length < 2 then
         false
     else
-        // Check if the lines meet the similarity and difference criteria
-        identicalCount >= minIdentical && differentCount >= minDifferent
+        // Split into characters (handling Unicode properly)
+        let chars1 = line1.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toList
+        let chars2 = line2.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toList
+        let runeLen1 = chars1.Length
+        let runeLen2 = chars2.Length
+        let minRuneLength = min runeLen1 runeLen2
+        
+        // Calculate common prefix and suffix using runes
+        let mutable prefixLen = 0
+        while prefixLen < minRuneLength && chars1.[prefixLen] = chars2.[prefixLen] do
+            prefixLen <- prefixLen + 1
+
+        let mutable suffixLen = 0
+        while suffixLen < minRuneLength - prefixLen && 
+              chars1.[runeLen1 - 1 - suffixLen] = chars2.[runeLen2 - 1 - suffixLen] do
+            suffixLen <- suffixLen + 1
+
+        // Also check for character frequency similarity
+        let charSet1 = Set.ofList chars1
+        let charSet2 = Set.ofList chars2
+        let commonChars = Set.intersect charSet1 charSet2 |> Set.count
+        
+        // Calculate the minimum required identical characters based on string length
+        let minIdentical = 
+            if minRuneLength <= 4 then 2
+            elif minRuneLength <= 10 then 3
+            else minRuneLength / 3  // For longer strings, require 33% similarity
+
+        // Calculate the minimum required different characters
+        let minDifferent = 
+            if minRuneLength <= 4 then 1
+            elif minRuneLength <= 10 then 2
+            else 3
+
+        // The common parts count towards identical characters
+        let commonCount = max (prefixLen + suffixLen) commonChars
+
+        // Additional check for length difference
+        let lengthDiffOk = float (max line1.Length line2.Length - min line1.Length line2.Length) <= float (max line1.Length line2.Length) * 0.5
+
+        // Check for significant reordering
+        let reordered = commonChars > minRuneLength / 2 && prefixLen + suffixLen < minRuneLength / 3
+
+        // Special case for single character difference at the end
+        let singleCharDiff = 
+            abs(runeLen1 - runeLen2) <= 1 && 
+            (prefixLen >= minRuneLength - 1 || suffixLen >= minRuneLength - 1)
+
+        // Special case for emoji or punctuation change
+        let singleTokenDiff =
+            prefixLen + suffixLen >= minRuneLength - 1 &&
+            abs(runeLen1 - runeLen2) <= 1
+
+        // Ensure the lines are not identical and meet criteria
+        line1 <> line2 && 
+        (lengthDiffOk || reordered || singleCharDiff || singleTokenDiff) && 
+        (commonCount >= minIdentical || singleTokenDiff) && 
+        ((max line1.Length line2.Length - min line1.Length line2.Length + (minRuneLength - commonCount)) >= minDifferent || singleTokenDiff)
 
 // Function to compute the Longest Common Subsequence (LCS)
 // Optimized LCS using Dynamic Programming
