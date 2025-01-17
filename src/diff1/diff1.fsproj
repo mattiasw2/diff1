@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="StringHelper.fs" />
     <Compile Include="CompareFiles.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

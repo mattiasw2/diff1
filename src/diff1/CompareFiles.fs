@@ -2,6 +2,8 @@
 
 open System
 open System.IO
+open System.Globalization
+open StringHelper
 
 /// Determines whether two lines are similar but different based on the following criteria:
 /// 1. Similarity: The lines must have at least `X` consecutive identical characters.
@@ -104,170 +106,39 @@ let lcs (xs: 'a list) (ys: 'a list) : 'a list =
 
     backtrack m n []
 
-type DiffPart =
-    | Common of string
-    | Difference of string * string
-
+/// Highlights the differences between two similar strings by wrapping the differing parts in parentheses
+/// For example: "hello world" and "hello there" becomes "hello (world|there)"
 let highlightDifferences (line1: string) (line2: string) : string =
-    let maxLength = max line1.Length line2.Length
-    
-    // Convert to rune arrays for proper Unicode handling
-    let runes1 = line1.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
-    let runes2 = line2.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
-    let runeLen1 = runes1.Length
-    let runeLen2 = runes2.Length
-    
-    // Identify initial differences
-    let rec identifyDiffs (i: int) (acc: DiffPart list) (current1: string) (current2: string) : DiffPart list =
-        if i >= max runeLen1 runeLen2 then
-            if current1 <> "" || current2 <> "" then
-                acc @ [Difference(current1, current2)]
-            else acc
-        else
-            let c1 = if i < runeLen1 then runes1.[i] else ""
-            let c2 = if i < runeLen2 then runes2.[i] else ""
-            
-            if c1 = c2 then
-                let baseAcc =
-                    if current1 <> "" || current2 <> "" then
-                        acc @ [Difference(current1, current2)]
-                    else acc
-                
-                match List.tryLast baseAcc with
-                | Some(Common s) ->
-                    let init = List.take (List.length baseAcc - 1) baseAcc
-                    identifyDiffs (i + 1) (init @ [Common (s + c1)]) "" ""
-                | _ ->
-                    identifyDiffs (i + 1) (baseAcc @ [Common c1]) "" ""
-            else
-                identifyDiffs (i + 1) acc (current1 + c1) (current2 + c2)
+    let (prefix, diff1, diff2) = StringHelper.extractDifferences line1 line2
+    if String.IsNullOrEmpty(prefix) && String.IsNullOrEmpty(diff1) && String.IsNullOrEmpty(diff2) then
+        line1  // Return original line if no differences
+    else
+        prefix + "(" + diff1 + "|" + diff2 + ")"
 
-    // Helper function to calculate prefix length
-    let findPrefixLength (s1: string) (s2: string) : int =
-        let s1Runes = s1.EnumerateRunes() |> Seq.toArray
-        let s2Runes = s2.EnumerateRunes() |> Seq.toArray
-        let mutable i = 0
-        let len = min s1Runes.Length s2Runes.Length
-        while i < len && s1Runes.[i].Equals(s2Runes.[i]) do
-            i <- i + 1
-        if i = 0 then 0
-        else s1Runes |> Seq.take i |> Seq.map (fun r -> r.ToString()) |> String.concat "" |> String.length
-
-    // Helper function to calculate suffix length
-    let findSuffixLength (s1: string) (s2: string) : int =
-        let s1Runes = s1.EnumerateRunes() |> Seq.toArray
-        let s2Runes = s2.EnumerateRunes() |> Seq.toArray
-        let mutable i = 0
-        let len = min s1Runes.Length s2Runes.Length
-        while i < len && s1Runes.[s1Runes.Length - 1 - i].Equals(s2Runes.[s2Runes.Length - 1 - i]) do
-            i <- i + 1
-        if i = 0 then 0
-        else s1Runes |> Seq.skip (s1Runes.Length - i) |> Seq.map (fun r -> r.ToString()) |> String.concat "" |> String.length
-
-    // Helper function to extract differences between two strings
-    let extractDifferences (s1: string) (s2: string) : string * string * string =
-        let prefixLen = findPrefixLength s1 s2
-        let prefix = s1.[0..prefixLen-1]
-        
-        let s1WithoutPrefix = s1.[prefixLen..]
-        let s2WithoutPrefix = s2.[prefixLen..]
-        
-        let suffixLen = findSuffixLength s1WithoutPrefix s2WithoutPrefix
-        let diff1 = 
-            if suffixLen = 0 then s1WithoutPrefix
-            else s1WithoutPrefix.[0..s1WithoutPrefix.Length-suffixLen-1]
-        let diff2 = 
-            if suffixLen = 0 then s2WithoutPrefix
-            else s2WithoutPrefix.[0..s2WithoutPrefix.Length-suffixLen-1]
-        
-        (prefix, diff1, diff2)
-
-    // Post-process each Difference part to split into smaller parts
-    let rec splitDifferences (parts: DiffPart list) : DiffPart list =
-        let rec splitDifferencePart (d1: string) (d2: string) : DiffPart list =
-            let d1Runes = d1.EnumerateRunes() |> Seq.toArray
-            let d2Runes = d2.EnumerateRunes() |> Seq.toArray
-            
-            let prefixLen = findPrefixLength d1 d2
-            let suffixLen = findSuffixLength d1 d2
-            
-            let commonPrefix = d1.[0..prefixLen-1]
-            
-            let d1WithoutPrefix = d1.[prefixLen..]
-            let d2WithoutPrefix = d2.[prefixLen..]
-            
-            let commonSuffix = 
-                if suffixLen > 0 then d1WithoutPrefix.[d1WithoutPrefix.Length-suffixLen..]
-                else ""
-                
-            let diff1 = 
-                if suffixLen = 0 then d1WithoutPrefix
-                else d1WithoutPrefix.[0..d1WithoutPrefix.Length-suffixLen-1]
-            let diff2 = 
-                if suffixLen = 0 then d2WithoutPrefix
-                else d2WithoutPrefix.[0..d2WithoutPrefix.Length-suffixLen-1]
-            
-            let parts = []
-            let parts = if commonPrefix <> "" then parts @ [Common commonPrefix] else parts
-            let parts = if diff1 <> "" || diff2 <> "" then parts @ [Difference (diff1, diff2)] else parts
-            let parts = if commonSuffix <> "" then parts @ [Common commonSuffix] else parts
-            parts
-        
-        match parts with
-        | [] -> []
-        | Difference(d1, d2) :: rest -> splitDifferencePart d1 d2 @ splitDifferences rest
-        | part :: rest -> part :: splitDifferences rest
-
-    // Render output based on parts
-    let rec render (acc: string) (diffs: DiffPart list) : string =
-        match diffs with
-        | [] -> acc
-        | Common s :: rest -> render (acc + s) rest
-        | Difference (d1, d2) :: rest -> render (acc + $"({d1}|{d2})") rest
-
-    // Process input
-    let diffs = identifyDiffs 0 [] "" ""
-    let refinedDiffs = splitDifferences diffs
-    render "" refinedDiffs
-
-// Function to compare two files using LCS
+/// Compare two files and print their differences
 let compareFiles (file1: string) (file2: string) : unit =
     let lines1 = File.ReadAllLines(file1) |> Array.toList
     let lines2 = File.ReadAllLines(file2) |> Array.toList
     let common = lcs lines1 lines2
 
-    let rec diff (xs: string list) (ys: string list) (common: string list) (acc: string list) : string list =
-        match xs, ys, common with
-        | [], [], [] -> List.rev acc // All lists are empty
-        | [], [], _ -> List.rev acc // xs and ys are empty, common may have elements
-        | [], y::ytail, _ -> // xs is empty, handle added lines
-            diff [] ytail common ((sprintf "+ %s" y) :: acc)
-        | x::xtail, [], _ -> // ys is empty, handle removed lines
-            diff xtail [] common ((sprintf "- %s" x) :: acc)
-        | x::xtail, y::ytail, [] -> // common is empty, handle remaining lines
-            if x = y then
-                diff xtail ytail [] ((sprintf "  %s" x) :: acc)
-            else if similarButDifferent x y then
-                let highlighted = highlightDifferences x y
-                diff xtail ytail [] ((sprintf "~ %s" highlighted) :: acc)
-            else
-                // Treat as removed and added
-                diff xtail ytail [] ((sprintf "- %s" x) :: (sprintf "+ %s" y) :: acc)
-        | x::xtail, y::ytail, c::ctail when x = c && y = c -> // Lines match common
-            diff xtail ytail ctail ((sprintf "  %s" x) :: acc)
-        | x::xtail, _, c::ctail when x = c -> // Line in xs matches common
-            diff xtail ys ctail ((sprintf "- %s" x) :: acc)
-        | _, y::ytail, c::ctail when y = c -> // Line in ys matches common
-            diff xs ytail ctail ((sprintf "+ %s" y) :: acc)
-        | x::xtail, y::ytail, c::ctail -> // Handle modified lines
-            if x = y then
-                diff xtail ytail ctail ((sprintf "  %s" x) :: acc)
-            else if similarButDifferent x y then
-                let highlighted = highlightDifferences x y
-                diff xtail ytail ctail ((sprintf "~ %s" highlighted) :: acc)
-            else
-                // Treat as removed and added
-                diff xtail ytail ctail ((sprintf "- %s" x) :: (sprintf "+ %s" y) :: acc)
+    let rec processLines (lines1: string list) (lines2: string list) (common: string list) =
+        match lines1, lines2, common with
+        | [], [], [] -> ()  // All lines processed
+        | l1::rest1, l2::rest2, c::restc when l1 = c && l2 = c ->
+            printfn "  %s" l1  // Common line
+            processLines rest1 rest2 restc
+        | l1::rest1, l2::rest2, _ when similarButDifferent l1 l2 ->
+            printfn "~ %s" (highlightDifferences l1 l2)  // Similar but different
+            processLines rest1 rest2 common
+        | l1::rest1, l2::_, _ ->
+            printfn "- %s" l1  // Line removed
+            processLines rest1 lines2 common
+        | [], l2::rest2, _ ->
+            printfn "+ %s" l2  // Line added
+            processLines [] rest2 common
+        | l1::rest1, [], _ ->
+            printfn "- %s" l1  // Line removed
+            processLines rest1 [] common
+        | _, _, _ -> ()  // Should not happen
 
-    let differences = diff lines1 lines2 common []
-    differences |> List.iter (printfn "%s")
+    processLines lines1 lines2 common

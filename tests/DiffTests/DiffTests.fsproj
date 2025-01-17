@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="StringHelperTests.fs" />
+    <Compile Include="LcsTests.fs" />
     <Compile Include="FsCheckAddons.fs" />
     <Compile Include="SimilarButDifferentPropertyTests.fs" />
     <Compile Include="FileGenerator.fs" />
