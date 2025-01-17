@@ -1,4 +1,4 @@
-﻿module CompareFiles
+module CompareFiles
 
 open System
 open System.IO
@@ -143,38 +143,73 @@ let highlightDifferences (line1: string) (line2: string) : string =
                 identifyDiffs (i + 1) acc (current1 + c1) (current2 + c2)
 
     // Helper function to calculate prefix length
-    let findPrefixLength (s1: string[]) (s2: string[]) : int =
+    let findPrefixLength (s1: string) (s2: string) : int =
+        let s1Runes = s1.EnumerateRunes() |> Seq.toArray
+        let s2Runes = s2.EnumerateRunes() |> Seq.toArray
         let mutable i = 0
-        let len = min s1.Length s2.Length
-        while i < len && s1.[i] = s2.[i] do
+        let len = min s1Runes.Length s2Runes.Length
+        while i < len && s1Runes.[i].Equals(s2Runes.[i]) do
             i <- i + 1
-        i
+        if i = 0 then 0
+        else s1Runes |> Seq.take i |> Seq.map (fun r -> r.ToString()) |> String.concat "" |> String.length
 
     // Helper function to calculate suffix length
-    let findSuffixLength (s1: string[]) (s2: string[]) : int =
+    let findSuffixLength (s1: string) (s2: string) : int =
+        let s1Runes = s1.EnumerateRunes() |> Seq.toArray
+        let s2Runes = s2.EnumerateRunes() |> Seq.toArray
         let mutable i = 0
-        let len = min s1.Length s2.Length
-        while i < len && s1.[s1.Length - 1 - i] = s2.[s2.Length - 1 - i] do
+        let len = min s1Runes.Length s2Runes.Length
+        while i < len && s1Runes.[s1Runes.Length - 1 - i].Equals(s2Runes.[s2Runes.Length - 1 - i]) do
             i <- i + 1
-        i
+        if i = 0 then 0
+        else s1Runes |> Seq.skip (s1Runes.Length - i) |> Seq.map (fun r -> r.ToString()) |> String.concat "" |> String.length
+
+    // Helper function to extract differences between two strings
+    let extractDifferences (s1: string) (s2: string) : string * string * string =
+        let prefixLen = findPrefixLength s1 s2
+        let prefix = s1.[0..prefixLen-1]
+        
+        let s1WithoutPrefix = s1.[prefixLen..]
+        let s2WithoutPrefix = s2.[prefixLen..]
+        
+        let suffixLen = findSuffixLength s1WithoutPrefix s2WithoutPrefix
+        let diff1 = 
+            if suffixLen = 0 then s1WithoutPrefix
+            else s1WithoutPrefix.[0..s1WithoutPrefix.Length-suffixLen-1]
+        let diff2 = 
+            if suffixLen = 0 then s2WithoutPrefix
+            else s2WithoutPrefix.[0..s2WithoutPrefix.Length-suffixLen-1]
+        
+        (prefix, diff1, diff2)
 
     // Post-process each Difference part to split into smaller parts
     let rec splitDifferences (parts: DiffPart list) : DiffPart list =
         let rec splitDifferencePart (d1: string) (d2: string) : DiffPart list =
-            let d1Runes = d1.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
-            let d2Runes = d2.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
+            let d1Runes = d1.EnumerateRunes() |> Seq.toArray
+            let d2Runes = d2.EnumerateRunes() |> Seq.toArray
             
-            let prefixLen = findPrefixLength d1Runes d2Runes
-            let suffixLen = findSuffixLength d1Runes d2Runes
+            let prefixLen = findPrefixLength d1 d2
+            let suffixLen = findSuffixLength d1 d2
             
-            let diff1 = d1Runes |> Array.skip prefixLen |> Array.take (d1Runes.Length - prefixLen - suffixLen) |> String.concat ""
-            let diff2 = d2Runes |> Array.skip prefixLen |> Array.take (d2Runes.Length - prefixLen - suffixLen) |> String.concat ""
-            let commonPrefix = d1Runes |> Array.take prefixLen |> String.concat ""
-            let commonSuffix = d1Runes |> Array.skip (d1Runes.Length - suffixLen) |> String.concat ""
-
+            let commonPrefix = d1.[0..prefixLen-1]
+            
+            let d1WithoutPrefix = d1.[prefixLen..]
+            let d2WithoutPrefix = d2.[prefixLen..]
+            
+            let commonSuffix = 
+                if suffixLen > 0 then d1WithoutPrefix.[d1WithoutPrefix.Length-suffixLen..]
+                else ""
+                
+            let diff1 = 
+                if suffixLen = 0 then d1WithoutPrefix
+                else d1WithoutPrefix.[0..d1WithoutPrefix.Length-suffixLen-1]
+            let diff2 = 
+                if suffixLen = 0 then d2WithoutPrefix
+                else d2WithoutPrefix.[0..d2WithoutPrefix.Length-suffixLen-1]
+            
             let parts = []
             let parts = if commonPrefix <> "" then parts @ [Common commonPrefix] else parts
-            let parts = if diff1 <> "" || diff2 <> "" then parts @ [Difference(diff1, diff2)] else parts
+            let parts = if diff1 <> "" || diff2 <> "" then parts @ [Difference (diff1, diff2)] else parts
             let parts = if commonSuffix <> "" then parts @ [Common commonSuffix] else parts
             parts
         
