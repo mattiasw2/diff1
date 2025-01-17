@@ -21,6 +21,13 @@ open Xunit
 [<InlineData("the quick brown fox", "the slow brown fox", "the (quick|slow) brown fox")>] // Multi-word difference
 [<InlineData("this is a test", "this was a test", "this (i|wa)s a test")>] // Multi-word difference
 [<InlineData("one two three", "one two four", "one two (three|four)")>] // Multi-word difference
+[<InlineData("", "", "")>] // Empty strings
+[<InlineData("", "abc", "(|abc)")>] // One empty, one non-empty
+[<InlineData("abc", "", "(abc|)")>] // One non-empty, one empty
+[<InlineData("αβγ", "αδγ", "α(β|δ)γ")>] // Unicode characters
+[<InlineData("Hello🌍", "Hello🌎", "Hello(🌍|🌎)")>] // Emojis
+[<InlineData("👨‍💻 coding", "👩‍💻 coding", "(👨|👩)‍💻 coding")>] // Complex emojis with ZWJ
+[<InlineData("  abc  ", "  xyz  ", "  (abc|xyz)  ")>] // Preserve whitespace
 let ``highlightDifferences should correctly highlight differences`` (left: string) (right: string) (expected: string) =
     let result = CompareFiles.highlightDifferences left right
     Assert.Equal(expected, result)

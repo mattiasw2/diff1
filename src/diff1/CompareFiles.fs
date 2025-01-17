@@ -111,15 +111,21 @@ type DiffPart =
 let highlightDifferences (line1: string) (line2: string) : string =
     let maxLength = max line1.Length line2.Length
     
+    // Convert to rune arrays for proper Unicode handling
+    let runes1 = line1.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
+    let runes2 = line2.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
+    let runeLen1 = runes1.Length
+    let runeLen2 = runes2.Length
+    
     // Identify initial differences
     let rec identifyDiffs (i: int) (acc: DiffPart list) (current1: string) (current2: string) : DiffPart list =
-        if i >= maxLength then
+        if i >= max runeLen1 runeLen2 then
             if current1 <> "" || current2 <> "" then
                 acc @ [Difference(current1, current2)]
             else acc
         else
-            let c1 = if i < line1.Length then line1.[i].ToString() else ""
-            let c2 = if i < line2.Length then line2.[i].ToString() else ""
+            let c1 = if i < runeLen1 then runes1.[i] else ""
+            let c2 = if i < runeLen2 then runes2.[i] else ""
             
             if c1 = c2 then
                 let baseAcc =
@@ -137,7 +143,7 @@ let highlightDifferences (line1: string) (line2: string) : string =
                 identifyDiffs (i + 1) acc (current1 + c1) (current2 + c2)
 
     // Helper function to calculate prefix length
-    let findPrefixLength (s1: string) (s2: string) : int =
+    let findPrefixLength (s1: string[]) (s2: string[]) : int =
         let mutable i = 0
         let len = min s1.Length s2.Length
         while i < len && s1.[i] = s2.[i] do
@@ -145,7 +151,7 @@ let highlightDifferences (line1: string) (line2: string) : string =
         i
 
     // Helper function to calculate suffix length
-    let findSuffixLength (s1: string) (s2: string) : int =
+    let findSuffixLength (s1: string[]) (s2: string[]) : int =
         let mutable i = 0
         let len = min s1.Length s2.Length
         while i < len && s1.[s1.Length - 1 - i] = s2.[s2.Length - 1 - i] do
@@ -155,12 +161,16 @@ let highlightDifferences (line1: string) (line2: string) : string =
     // Post-process each Difference part to split into smaller parts
     let rec splitDifferences (parts: DiffPart list) : DiffPart list =
         let rec splitDifferencePart (d1: string) (d2: string) : DiffPart list =
-            let prefixLen = findPrefixLength d1 d2
-            let suffixLen = findSuffixLength d1 d2
-            let diff1 = d1.Substring(prefixLen, d1.Length - prefixLen - suffixLen)
-            let diff2 = d2.Substring(prefixLen, d2.Length - prefixLen - suffixLen)
-            let commonPrefix = d1.Substring(0, prefixLen)
-            let commonSuffix = d1.Substring(d1.Length - suffixLen)
+            let d1Runes = d1.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
+            let d2Runes = d2.EnumerateRunes() |> Seq.map (fun r -> r.ToString()) |> Seq.toArray
+            
+            let prefixLen = findPrefixLength d1Runes d2Runes
+            let suffixLen = findSuffixLength d1Runes d2Runes
+            
+            let diff1 = d1Runes |> Array.skip prefixLen |> Array.take (d1Runes.Length - prefixLen - suffixLen) |> String.concat ""
+            let diff2 = d2Runes |> Array.skip prefixLen |> Array.take (d2Runes.Length - prefixLen - suffixLen) |> String.concat ""
+            let commonPrefix = d1Runes |> Array.take prefixLen |> String.concat ""
+            let commonSuffix = d1Runes |> Array.skip (d1Runes.Length - suffixLen) |> String.concat ""
 
             let parts = []
             let parts = if commonPrefix <> "" then parts @ [Common commonPrefix] else parts
