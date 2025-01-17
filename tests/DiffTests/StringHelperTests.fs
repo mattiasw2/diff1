@@ -1,4 +1,4 @@
-module StringHelperTests
+﻿module StringHelperTests
 
 open Xunit
 open CompareFiles

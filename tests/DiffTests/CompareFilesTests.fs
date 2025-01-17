@@ -1,4 +1,4 @@
-module CompareFilesTests
+﻿module CompareFilesTests
 
 open System
 open System.IO
