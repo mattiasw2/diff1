@@ -32,15 +32,6 @@ let getTextElementPositions (s: string) =
             getPositions (pos + len) ((pos, len) :: acc)
     getPositions 0 [] |> Array.ofList
 
-/// Helper function to get the character position after a given number of text elements
-let getPositionAfterElements (positions: (int * int)[]) (elementCount: int) =
-    if elementCount = 0 then 0
-    elif elementCount > positions.Length then 
-        let lastPos, lastLen = positions.[positions.Length - 1]
-        lastPos + lastLen
-    else
-        let pos, len = positions.[elementCount - 1]
-        pos + len
 
 /// Helper function to calculate prefix length in terms of character positions.
 /// This function returns the length in bytes of the common prefix, which can be used with String.Substring.
