@@ -7,9 +7,9 @@ open CompareFiles
 [<InlineData("", "", "")>]  // Empty lists
 [<InlineData("a", "b", "")>]  // No common elements
 [<InlineData("a,b,c", "b,c,d", "b,c")>]  // Common subsequence
-[<InlineData("x,y,z", "x,y,z", "x,y,z")>]  // Identical lists
 [<InlineData("a,b,c,d", "b,d,e", "b,d")>]  // Scattered common elements
 [<InlineData("hello,world", "hello,there,world", "hello,world")>]  // Common prefix and suffix
+[<InlineData("x,y,z", "x,y,z", "x,y,z")>]  // Identical lists
 let ``Test lcs function`` (list1: string, list2: string, expected: string) =
     let parseList (s: string) = 
         if System.String.IsNullOrEmpty(s) then []

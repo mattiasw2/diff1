@@ -7,29 +7,27 @@ open StringHelper
 [<Fact>]
 let ``findPrefixLength should return correct prefix length`` () =
     let testCases = [
-        ("", "", 0)
-        ("test🎮", "test📱", 4)
-        ("hello world", "hello there", 6)
-        ("αβγtest", "αβγother", 3)
-        ("abc", "def", 0)
-        ("abc", "abdef", 2)
-        ("", "hello", 0)
-        ("hello", "", 0)
-        ("👨‍👩‍👧", "👨‍👩‍👦", 0)  // Different emoji sequences, no common prefix
-        ("αβγ", "αβδ", 2)
-        ("👨‍👩", "👨‍", 0)  // Partial family emoji match
-        ("a", "abc", 1)
-        ("hello", "hello world", 5)
-        ("αβγtest", "αβγother", 3)
-        ("hello", "help", 3)  // Common prefix "hel"
-        ("abc", "def", 0)     // No common prefix
-        ("", "test", 0)       // Empty first string
-        ("test", "", 0)       // Empty second string
         ("", "", 0)           // Both empty
-        ("👨‍👩", "👨‍", 0)      // Different emoji sequences
-        ("👨‍👩‍👧", "👨‍👩‍👦", 0)  // Different emoji sequences
+        ("", "hello", 0)
+        ("", "test", 0)       // Empty first string
+        ("a", "abc", 1)
+        ("abc", "abdef", 2)
+        ("abc", "def", 0)     // No common prefix
+        ("hello world", "hello there", 6)
+        ("hello", "", 0)
+        ("hello", "hello world", 5)
+        ("hello", "help", 3)  // Common prefix "hel"
+        ("test", "", 0)       // Empty second string
+        ("test🎮", "test📱", 4)
         ("test🎮", "test📱", 4)  // Common prefix up to emoji
+        ("αβγ", "αβδ", 2)
         ("αβγ", "αβδ", 2)     // Common prefix in Greek letters
+        ("αβγtest", "αβγother", 3)
+        ("αβγtest", "αβγother", 3)
+        ("👨‍👩", "👨‍", 0)      // Different emoji sequences
+        ("👨‍👩", "👨‍", 0)  // Partial family emoji match
+        ("👨‍👩‍👧", "👨‍👩‍👦", 0)  // Different emoji sequences
+        ("👨‍👩‍👧", "👨‍👩‍👦", 0)  // Different emoji sequences, no common prefix
     ]
     
     for (s1, s2, expected) in testCases do
@@ -40,13 +38,13 @@ let ``findPrefixLength should return correct prefix length`` () =
 [<Fact>]
 let ``findPrefixLengthSpecial should work with plain strings`` () =
     let testCases = [
-        ("hello", "help", 3)     // Common prefix "hel"
-        ("abc", "def", 0)        // No common prefix
-        ("", "test", 0)          // Empty first string
-        ("test", "", 0)          // Empty second string
         ("", "", 0)              // Both empty
-        ("hello", "hello", 5)    // Identical strings
+        ("", "test", 0)          // Empty first string
         ("abc", "abdef", 2)      // Partial match
+        ("abc", "def", 0)        // No common prefix
+        ("hello", "hello", 5)    // Identical strings
+        ("hello", "help", 3)     // Common prefix "hel"
+        ("test", "", 0)          // Empty second string
     ]
     
     for (s1, s2, expected) in testCases do
@@ -57,28 +55,27 @@ let ``findPrefixLengthSpecial should work with plain strings`` () =
 [<Fact>]
 let ``findSuffixLength should return correct suffix length`` () =
     let testCases = [
-        ("", "", 0)
-        ("test🎮", "test📱", 0)
-        ("αβγtest", "δβγtest", 6)  // "γtest" is a common suffix (2 bytes for γ + 4 for "test")
-        ("a", "cba", 1)
-        ("test👨‍👩‍👧", "other👨‍👩‍👧", 8)  // Full emoji sequence "👨‍👩‍👧" is 8 bytes
+        ("", "", 0)            // Both empty
         ("", "hello", 0)
-        ("world hello", "goodbye hello", 6)
-        ("αβγ", "δβγ", 2)
-        ("👨‍👩‍👧", "👧", 0)  // Not a suffix - 👧 is part of a larger text element
+        ("", "test", 0)        // Empty first string
+        ("a", "cba", 1)
         ("abc", "deabc", 3)
         ("abc", "def", 0)
-        ("hello", "", 0)
-        ("the world", "hello world", 6)
-        ("👨‍👩‍👧", "👨‍👩‍👧", 8)  // Full complex emoji match (8 bytes)
-        ("hello", "jello", 4)  // Common suffix "ello"
         ("abc", "def", 0)      // No common suffix
-        ("", "test", 0)        // Empty first string
+        ("hello", "", 0)
+        ("hello", "jello", 4)  // Common suffix "ello"
         ("test", "", 0)        // Empty second string
-        ("", "", 0)            // Both empty
-        ("αβγtest", "δβγtest", 6)  // Common suffix with Greek letters
         ("test🎮", "best🎮", 5)    // Common suffix with emoji (1 byte for 't' + 4 bytes for 🎮)
+        ("test🎮", "test📱", 0)
+        ("test👨‍👩‍👧", "other👨‍👩‍👧", 8)  // Full emoji sequence "👨‍👩‍👧" is 8 bytes
+        ("the world", "hello world", 6)
+        ("world hello", "goodbye hello", 6)
+        ("αβγ", "δβγ", 2)
+        ("αβγtest", "δβγtest", 6)  // "γtest" is a common suffix (2 bytes for γ + 4 for "test")
+        ("αβγtest", "δβγtest", 6)  // Common suffix with Greek letters
+        ("👨‍👩‍👧", "👧", 0)  // Not a suffix - 👧 is part of a larger text element
         ("👨‍👩‍👧", "👨‍👩‍👦", 0)    // Different emoji sequences
+        ("👨‍👩‍👧", "👨‍👩‍👧", 8)  // Full complex emoji match (8 bytes)
     ]
     
     for (s1, s2, expected) in testCases do
@@ -89,13 +86,13 @@ let ``findSuffixLength should return correct suffix length`` () =
 [<Fact>]
 let ``findSuffixLengthSpecial should work with plain strings`` () =
     let testCases = [
-        ("hello", "jello", 4)    // Common suffix "ello"
-        ("abc", "def", 0)        // No common suffix
-        ("", "test", 0)          // Empty first string
-        ("test", "", 0)          // Empty second string
         ("", "", 0)              // Both empty
-        ("hello", "hello", 5)    // Identical strings
+        ("", "test", 0)          // Empty first string
         ("abc", "deabc", 3)      // Partial match
+        ("abc", "def", 0)        // No common suffix
+        ("hello", "hello", 5)    // Identical strings
+        ("hello", "jello", 4)    // Common suffix "ello"
+        ("test", "", 0)          // Empty second string
     ]
     
     for (s1, s2, expected) in testCases do
@@ -164,26 +161,24 @@ let ``getTextElementPositions should give correct positions for Greek letters`` 
 [<Fact>]
 let ``extractDifferences should correctly split strings`` () =
     let testCases = [
-        ("start here", "end here", "", "start", "end")  // Common suffix " here"
-        ("goodbye world", "goodbye earth", "goodbye ", "world", "earth")
-        ("αβγ", "αβδ", "αβ", "γ", "δ")
-        ("same", "same", "same", "", "")
-        ("", "", "", "", "")
-        ("totally different", "completely unique", "", "totally different", "completely unique")
-        ("👨‍👩‍👧test", "👨‍👩‍👧other", "👨‍👩‍👧", "test", "other")
-        ("👨‍👩‍👦 coding", "👨‍👩‍👦 coding", "👨‍👩‍👦 coding", "", "")
-        ("hello world", "hello there", "hello ", "world", "there")
-        ("test👨‍👩‍👧", "test👨‍👩‍👦", "test", "👨‍👩‍👧", "👨‍👩‍👦")
+        ("", "", "", "", "")                    // Both empty
+        ("", "test", "", "", "test")            // Empty first string
         ("a", "b", "", "a", "b")
-        ("test👨‍👩‍👧end", "test👨‍👩‍👦end", "test", "👨‍👩‍👧", "👨‍👩‍👦")
-        ("the end", "the beginning", "the ", "end", "beginning")
+        ("goodbye world", "goodbye earth", "goodbye ", "world", "earth")
+        ("hello world", "hello there", "hello ", "world", "there")
         ("hello", "help", "hel", "lo", "p")     // Common prefix
         ("jello", "hello", "", "j", "h")        // Different first letters, no common prefix
-        ("", "test", "", "", "test")            // Empty first string
+        ("same", "same", "same", "", "")
+        ("start here", "end here", "", "start", "end")  // Common suffix " here"
         ("test", "", "", "test", "")            // Empty second string
-        ("", "", "", "", "")                    // Both empty
         ("test🎮", "test📱", "test", "🎮", "📱")  // Common prefix with different emojis
+        ("test👨‍👩‍👧", "test👨‍👩‍👦", "test", "👨‍👩‍👧", "👨‍👩‍👦")
+        ("test👨‍👩‍👧end", "test👨‍👩‍👦end", "test", "👨‍👩‍👧", "👨‍👩‍👦")
+        ("the end", "the beginning", "the ", "end", "beginning")
+        ("totally different", "completely unique", "", "totally different", "completely unique")
         ("αβγ", "αβδ", "αβ", "γ", "δ")          // Common prefix with Greek letters
+        ("👨‍👩‍👦 coding", "👨‍👩‍👦 coding", "👨‍👩‍👦 coding", "", "")
+        ("👨‍👩‍👧test", "👨‍👩‍👧other", "👨‍👩‍👧", "test", "other")
     ]
     
     for (s1, s2, expectedPrefix, expectedS1, expectedS2) in testCases do
