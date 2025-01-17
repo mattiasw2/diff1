@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /.windsurfrules
 /coveragereport
+/coverage-report
