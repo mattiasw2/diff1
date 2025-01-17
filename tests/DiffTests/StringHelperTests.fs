@@ -1,6 +1,7 @@
 ﻿module StringHelperTests
 
 open Xunit
+open System
 open StringHelper
 
 [<Fact>]

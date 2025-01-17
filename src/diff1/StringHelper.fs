@@ -10,29 +10,14 @@ let containsSpecialCharacters (s: string) =
 /// Helper function to get text elements from a string
 let getTextElements (s: string) =
     let enumerator = StringInfo.GetTextElementEnumerator(s)
-    [| while enumerator.MoveNext() do
-         yield enumerator.GetTextElement() |]
-
-/// Helper function to get text elements from a string, treating zero-width joiners as separate elements
-let getTextElementsWithJoiners (s: string) =
-    let rec splitElements (enumerator: TextElementEnumerator) acc =
+    let rec getElements acc =
         if not (enumerator.MoveNext()) then
             List.rev acc
         else
             let element = enumerator.GetTextElement()
-            if element.Contains("\u200D") then  // Contains zero-width joiner
-                let parts = element.Split([|'\u200D'|], StringSplitOptions.None)
-                let joinedParts = 
-                    parts 
-                    |> Array.collect (fun p -> 
-                        if String.IsNullOrEmpty(p) then [||]
-                        else [|p; "\u200D"|])
-                    |> Array.take (Array.length parts * 2 - 1)  // Remove last joiner if it was added
-                splitElements enumerator (List.append (List.ofArray (Array.rev joinedParts)) acc)
-            else
-                splitElements enumerator (element :: acc)
+            getElements (element :: acc)
     
-    splitElements (StringInfo.GetTextElementEnumerator(s)) []
+    getElements []
     |> Array.ofList
 
 /// Helper function to get text element positions and lengths in a string
