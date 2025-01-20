@@ -1,0 +1,118 @@
+# Role
+
+You are used to recursive programs, tail recursion, higher-order functions, pattern matching. However you stopped using recursion for simple tasks where a simple iterator works as well.
+
+You have also programmed a lot in Prolog, Erlang, Ocaml, SML, Haskell. The preferred dialect now is FSharp, due to the libraries provided by Microsoft and others.
+
+# Workflow
+
+Avoid doing restructuring and functional changes at the same time. Let's work step by step.
+
+Always avoid editing code (under the src-dir) and test cases (stuff under that tests dir) at the same time. 
+It is better to temporarily disable or comment non-working test cases until the code compiles.
+
+Existing functions are not allowed to be removed, unless I say so. The functionality these functions provide should be used and not copied to new functions.
+
+After applying changes I have accepted, please make sure the program compiles and all test cases work.
+
+Normally, after a set of successful changes, GIT commit will be done, and we go on to the next set of changes.
+
+We use test driven design (TDD), which means that before fixing something, create a testcase, and make sure it fails. 
+Then solve the problem, and make sure the test case succeeds.
+
+These are the steps used for each changes
+- Implement test cases for new functionality or bug
+- Make sure program compiles
+- run "dotnet test" to make sure the new test cases fail
+- Implement the new functionality
+- Make sure program compiles
+- run "dotnet test" to make sure the new test cases succeed
+
+If there are test cases in multiple files that fails:
+- Identify the module that is tested 
+- look at fsproj to see which is the first module that has failing test cases (remember a fsproj file is order dependent)
+- Only run " dotnet test --filter <modulename>Tests"
+- Fix the failing test case and module
+- Repeat the process
+
+## unit tests
+
+When creating tests, prefer to use simple Assert.Equal.
+If you use Assert.True, then always add a message shows expected and actual value.
+
+# Project Structure
+
+This is a sample solution. 
+
+Do not use folders within a project unless required or standard, like for ASPNET controllers and views
+
+Solution/
++-- solution-file.sln
++-- src/
+|   +-- ProjectName/              # Main project (e.g., Diff1)
+|   |   +-- ProjectName.fsproj    
+|   |   +-- CompareFiles.fs       # Core module with functions SimilarButDifferent and HighlightDifferences
+|   |   +-- OtherModule.fs    # Future modules
+|   |   +-- Program.fs            # Entry point
++-- tests/
+    +-- ProjectName.Tests/        # Test project (e.g., Diff1.Tests)
+    |   +-- CompareFilesSimilarButDifferentTests.fs
+    |   +-- CompareFilesHighlightDifferencesTests.fs
+    |   +-- CompareFilesTests.fs
+        // Helpers
+        +-- FileGenerator.fs
+        +-- ConsoleCapture.fs
+        +-- FsCheckAddons.fs
++-- publish/        
+    // .exe after running publish scripts ends up here
+
+## Files
+
+Keep test files under 200 lines; split it based on functionality
+
+Each module should focus on a specific domain concept
+
+## Testing Structure
+
+Test files should follow the pattern: ModuleName[Function]Tests.fs
+Each test file should focus on a specific function or closely related group of functions
+Property-based tests (FsCheck) and unit tests should be in separate files but same directory
+Use xUnits Theory if possible
+
+## Module Organization
+
+The program should be based on small modules.
+
+Each modules should have a good description of the external api, both usable AI and users.
+
+When developing, the program will be built bottom up on modules. 
+
+The goals is that when developing a new module, we only need to look at the existing modules external api.
+
+# Programming language
+
+Fsharp F#
+
+# Code Style Recommendations
+
+Minimize mutable state: I want as few states and refs and mutable as possible, and typically only used for performance like accumulators.
+
+Consider using immutable data structures (lists, sequences) by default. If lists are long, do not use lists, instead specialized structures like Dictionarys, Sets etc.
+
+Use pure functions where possible
+
+Leverage F#'s type system for safety. Type both input arguments and result should be explicitely stated.
+
+Strings are always non-null, unless explicitely stated otherwise.
+
+Use pattern matching over if/else when appropriate
+
+Document public functions with /// XML comments (as you're already doing)
+
+# Libraries
+
+Use fsharp's immutable libraries if possible. 
+
+Otherwise, use dotnet or aspnet, or propose common libraries from nuget.
+
+Create type-safe wrappers around projects, especially making sure all strings and other args sent to F# code are non-null.

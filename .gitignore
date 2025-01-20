@@ -361,7 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/.windsurfrules
 /coveragereport
 /coverage-report
 /tests/DiffTests/lcov.info
