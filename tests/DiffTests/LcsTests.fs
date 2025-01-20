@@ -22,7 +22,7 @@ let ``Test lcs with long sequences`` () =
     let longList1 = List.init 100 (fun i -> $"item{i}")
     let longList2 = List.init 100 (fun i -> if i % 2 = 0 then $"item{i}" else $"other{i}")
     let result = lcs longList1 longList2
-    Assert.True(result.Length > 0)
+    Assert.True(result.Length > 0, $"Expected non-empty result, but got length {result.Length}")
 
 [<Fact>]
 let ``Test lcs with empty sequences`` () =
